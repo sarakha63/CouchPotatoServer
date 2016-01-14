@@ -20,30 +20,47 @@ class Trailer(Plugin):
         if not group: group = {}
         if self.isDisabled() or len(group['files']['trailer']) > 0: return
 
-        trailers = fireEvent('trailer.search', group = group, merge = True)
+        if self.conf('usevf'):
+            try:
+                filename = self.conf('name').replace('<filename>', group['filename'].decode('latin-1'))
+            except:
+                filename = self.conf('name').replace('<filename>', group['filename'])
+            try:
+                destination = os.path.join(group['destination_dir'].decode('latin-1'), filename)
+            except:
+                destination = os.path.join(group['destination_dir'], filename)
+            trailers = fireEvent('vftrailer.search', group = group, filename=filename, destination=destination, merge = True)
+        else :
+            trailers = fireEvent('trailer.search', group = group, merge = True)
         if not trailers or trailers == []:
             log.info('No trailers found for: %s', getTitle(group))
             return False
 
-        for trailer in trailers.get(self.conf('quality'), []):
+        if self.conf('usevf'):
+            log.info('Trailers found in VF for: %s', getTitle(group))
+            return True
+        else:
 
-            ext = getExt(trailer)
-            filename = self.conf('name').replace('<filename>', group['filename']) + ('.%s' % ('mp4' if len(ext) > 5 else ext))
-            destination = os.path.join(group['destination_dir'], filename)
-            if not os.path.isfile(destination):
-                trailer_file = fireEvent('file.download', url = trailer, dest = destination, urlopen_kwargs = {'headers': {'User-Agent': 'Quicktime'}}, single = True)
-                if trailer_file and os.path.getsize(trailer_file) < (1024 * 1024):  # Don't trust small trailers (1MB), try next one
-                    os.unlink(trailer_file)
-                    continue
-            else:
-                log.debug('Trailer already exists: %s', destination)
+            for trailer in trailers.get(self.conf('quality'), []):
 
-            group['renamed_files'].append(destination)
+                ext = getExt(trailer)
+                filename = self.conf('name').replace('<filename>', group['filename']) + ('.%s' % ('mp4' if len(ext) > 5 else ext))
+                destination = os.path.join(group['destination_dir'], filename)
+                if not os.path.isfile(destination):
+                    trailer_file = fireEvent('file.download', url = trailer, dest = destination, urlopen_kwargs = {'headers': {'User-Agent': 'Quicktime'}}, single = True)
+                    if os.path.getsize(trailer_file) < (1024 * 1024):  # Don't trust small trailers (1MB), try next one
+                        os.unlink(trailer_file)
+                        continue
+                else:
+                    log.debug('Trailer already exists: %s', destination)
 
-            # Download first and break
-            break
+                group['renamed_files'].append(destination)
 
-        return True
+                # Download first and break
+                break
+
+            return True
+
 
 
 config = [{
@@ -60,6 +77,13 @@ config = [{
                     'label': 'Search and download trailers',
                     'default': False,
                     'type': 'enabler',
+                },
+                {
+                    'name': 'usevf',
+                    'label' : 'Search french Trailers (beta)',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
                 },
                 {
                     'name': 'quality',
