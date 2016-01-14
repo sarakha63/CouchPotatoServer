@@ -9,7 +9,7 @@ import string
 import sys
 import traceback
 
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp, toUnicode
 from couchpotato.core.logger import CPLog
 import six
 from six.moves import map, zip, filter
@@ -25,17 +25,17 @@ def fnEscape(pattern):
 def link(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateHardLinkW(six.text_type(dst), six.text_type(src), 0) == 0: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateHardLinkW(toUnicode(dst), toUnicode(src), 0) == 0: raise ctypes.WinError()
     else:
-        os.link(src, dst)
+        os.link(toUnicode(src), toUnicode(dst))
 
 
 def symlink(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateSymbolicLinkW(six.text_type(dst), six.text_type(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateSymbolicLinkW(toUnicode(dst), toUnicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
     else:
-        os.symlink(src, dst)
+        os.link(toUnicode(src), toUnicode(dst))
 
 
 def getUserDir():
@@ -142,17 +142,14 @@ def getExt(filename):
 
 def cleanHost(host, protocol = True, ssl = False, username = None, password = None):
     """Return a cleaned up host with given url options set
-
     Changes protocol to https if ssl is set to True and http if ssl is set to false.
     >>> cleanHost("localhost:80", ssl=True)
     'https://localhost:80/'
     >>> cleanHost("localhost:80", ssl=False)
     'http://localhost:80/'
-
     Username and password is managed with the username and password variables
     >>> cleanHost("localhost:80", username="user", password="passwd")
     'http://user:passwd@localhost:80/'
-
     Output without scheme (protocol) can be forced with protocol=False
     >>> cleanHost("localhost:80", protocol=False)
     'localhost:80'
@@ -411,3 +408,9 @@ def find(func, iterable):
             return item
 
     return None
+
+
+def compareVersions(version1, version2):
+    def normalize(v):
+        return [int(x) for x in re.sub(r'(\.0+)*$','', v).split(".")]
+    return cmp(normalize(version1), normalize(version2))
