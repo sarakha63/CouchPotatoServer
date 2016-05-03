@@ -29,6 +29,7 @@ class AlloCine(UserscriptBase):
             page_title = data[start + len('<title>'):end].strip().split('-')
 
             name = page_title[0].strip()
+            # PRODUCTION YEAR... instead of relreasing year
             year = page_title[1].strip()[-4:]
             return self.search(name, year)
         except:
