@@ -17,8 +17,8 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'http://www.cpasbien.io/',
-        'search': 'http://www.cpasbien.io/recherche/',
+        'test': 'http://www.cpasbien.cm/',
+        'search': 'http://www.cpasbien.cm/recherche/',
     }
 
     http_time_between_calls = 1 #seconds
@@ -44,25 +44,25 @@ class Base(TorrentProvider):
 
 
         TitleStringReal = (getTitle(movie['info']) + ' ' + simplifyString(quality['identifier'] )).replace('-',' ').replace(' ',' ').replace(' ',' ').replace(' ',' ').encode("utf8")
-        
+
         URL = (self.urls['search']).encode('UTF8')
         URL=unicodedata.normalize('NFD',unicode(URL,"utf8","replace"))
         URL=URL.encode('ascii','ignore')
         URL = urllib2.quote(URL.encode('utf8'), ":/?=")
-        
+
         values = {
           'champ_recherche' : TitleStringReal
         }
 
         data_tmp = urllib.urlencode(values)
         req = urllib2.Request(URL, data_tmp, headers={'User-Agent' : "Mozilla/5.0"} )
-        
+
         data = urllib2.urlopen(req )
-       
+
         id = 1000
 
         if data:
-                       
+
             try:
                 html = BeautifulSoup(data)
                 lin=0
@@ -83,7 +83,7 @@ class Base(TorrentProvider):
                 for result in resultdiv:
 
                     try:
-                        
+
                         new = {}
                         name = result.findAll(attrs = {'class' : ["titre"]})[0].text
                         testname=namer_check.correctName(name,movie)
@@ -91,16 +91,16 @@ class Base(TorrentProvider):
                             continue
                         detail_url = result.find("a")['href']
                         tmp = detail_url.split('/')[-1].replace('.html','.torrent')
-                        url_download = ('http://www.cpasbien.io/telechargement/%s' % tmp)
+                        url_download = ('http://www.cpasbien.cm/telechargement/%s' % tmp)
                         size = result.findAll(attrs = {'class' : ["poid"]})[0].text
                         seeder = result.findAll(attrs = {'class' : ["seed_ok"]})[0].text
                         leecher = result.findAll(attrs = {'class' : ["down"]})[0].text
                         age = '1'
 
                         verify = getTitle(movie['info']).split(' ')
-                        
+
                         add = 1
-                        
+
                         for verify_unit in verify:
                             if (name.lower().find(verify_unit.lower()) == -1) :
                                 add = 0
@@ -114,23 +114,23 @@ class Base(TorrentProvider):
                             new['name'] = name.strip()
                             new['url'] = url_download
                             new['detail_url'] = detail_url
-                           
+
                             new['size'] = self.parseSize(size)
                             new['age'] = self.ageToDays(age)
                             new['seeders'] = tryInt(seeder)
                             new['leechers'] = tryInt(leecher)
                             new['extra_check'] = extra_check
-                            new['download'] = self.loginDownload             
-    
+                            new['download'] = self.loginDownload
+
                             #new['score'] = fireEvent('score.calculate', new, movie, single = True)
-    
+
                             #log.error('score')
                             #log.error(new['score'])
-    
+
                             results.append(new)
-    
+
                             id = id+1
-                        
+
                     except:
                         log.error('Failed parsing cPASbien: %s', traceback.format_exc())
 
@@ -174,7 +174,7 @@ class Base(TorrentProvider):
         ]
 
         try:
-            response = opener.open('http://www.cpasbien.io', tryUrlencode({'url': '/'}))
+            response = opener.open('http://www.cpasbien.cm', tryUrlencode({'url': '/'}))
         except urllib2.URLError as e:
             log.error('Login to cPASbien failed: %s' % e)
             return False
@@ -186,33 +186,33 @@ class Base(TorrentProvider):
         else:
             log.error('Login to cPASbien failed: returned code %d' % response.getcode())
             return False
-        
-        
+
+
     def loginDownload(self, url = '', nzb_id = ''):
         values = {
           'url' : '/'
         }
         data_tmp = urllib.urlencode(values)
         req = urllib2.Request(url, data_tmp, headers={'User-Agent' : "Mozilla/5.0"} )
-        
+
         try:
             if not self.last_login_check and not self.login():
                 log.error('Failed downloading from %s', self.getName())
             return urllib2.urlopen(req).read()
         except:
             log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
-            
+
     def download(self, url = '', nzb_id = ''):
-        
+
         if not self.last_login_check and not self.login():
             return
-        
+
         values = {
           'url' : '/'
         }
         data_tmp = urllib.urlencode(values)
         req = urllib2.Request(url, data_tmp, headers={'User-Agent' : "Mozilla/5.0"} )
-        
+
         try:
             return urllib2.urlopen(req).read()
         except:
@@ -224,7 +224,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'cpasbien',
-            'description': 'See <a href="http://www.cpasbien.io/">cPASbien</a>',
+            'description': 'See <a href="http://www.cpasbien.cm/">cPASbien</a>',
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAgZJREFUOI2lkj9oE2EYxn93l/Quf440gXg4lBoEMd2MDuLSkk0R6hCnuqjUoR0c7FDo4Ca0CDo7uRRBqEMDXSLUUqRDiZM1NMEI1VKTlDZpUppccvc5nJp/KooPfMPH+z3P+zzv+8F/Quq8XIVEEOY0kASIzpoLlBKUV+CuCblfCjyF/P3V1Qi6jrCs7k4eD/X1dS5NTy9tQaJD2MFDkA23W8UwQFGQRJcB0DS0cBg/DPY4a0OVZcHeHihKf1ifD6pVfGD/VmBAUeDwEGQZLAskCVQV6nVYW+M4lSLQo9stoKpQLoNtO2QhYHsbkkmOczm+AP5eBy/BfwRDn8GHJLkpFp3utRpkMpDLwckJvlCIM9Uqg6YZeAAj58E1CVlXCaaigcCjsWhU8Xq9UCo5lisVx4FhODFkGbdpMtlqXa4IsVUHYkLcVlbg3ddGo3AzErl2emLCGaCmwcAAuL4ntCxoNpFsG8O2odlkXojF17CgAK2PsJna2Xk/ViyOh0dHXWhaewaW1T6mSb5a5V6rtbAMU4D5c18FyCzu7i5fyWZvDMfjOh4PNBpd5A/5vLheq93ZhMc/eF0Lr0NhaX8/eS6djo/EYqfQdUekUuHNxsZR4uDg1id40f9J+qE/CwTeitlZIWZmxKtQqOSFi39D7IQy5/c/fxIMpoGhfyUDMAwXzsL4n958A9jfxsJ8X4WQAAAAAElFTkSuQmCC',
             'wizard': True,
             'options': [
