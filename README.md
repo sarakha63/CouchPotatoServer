@@ -1,5 +1,3 @@
-Test git-cola
-
 CouchPotato
 =====
 
