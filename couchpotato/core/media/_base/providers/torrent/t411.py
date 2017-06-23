@@ -13,7 +13,7 @@ from StringIO import StringIO
 import gzip
 import time
 log = CPLog(__name__)
-ext_t411 = "ch"
+ext_t411 = "al"
 
 class Base(TorrentProvider):
 
